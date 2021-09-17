@@ -3,10 +3,15 @@ from flask.helpers import flash
 from sqlalchemy.sql.functions import user
 from . import db
 from .models import User
+from flask_login import login_user, logout_user, login_required
+from werkzeug.security import generate_password_hash,check_password_hash
 
 
 
 auth = Blueprint("auth", __name__)
+
+
+
 
 
 @auth.route("/login", methods=['GET','POST'])
@@ -41,7 +46,7 @@ def sign_up():
         elif len(email) < 4:
             flash('Email is invalid ', category='error')
         else:
-            new_user = User(email=email,username=username,password=password1)
+            new_user = User(email=email,username=username,password=generate_password_hash(password1, method='sha256'))
             db.session.add(new_user)
             db.session.commit()
             flash('User created!')
@@ -54,7 +59,6 @@ def sign_up():
 @auth.route("/logout")
 def logout():
     return redirect(url_for("views.home"))
-
 
 
 
