@@ -1,6 +1,6 @@
 from flask import Blueprint,render_template,redirect,url_for,request,flash
 from flask.helpers import flash
-from sqlalchemy.sql.functions import user
+from sqlalchemy.sql.functions import current_user, user
 from . import db
 from .models import User
 from flask_login import login_user, logout_user, login_required
@@ -16,8 +16,21 @@ auth = Blueprint("auth", __name__)
 
 @auth.route("/login", methods=['GET','POST'])
 def login():
-    email = request.form.get("email")
-    password = request.form.get("password")
+    if request.method == 'POST':
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        user = User.query.filter_by(email=email).first()
+        if user:
+            if check_password_hash(user.password, password):
+                flash("Logged in !")
+                login_user(user, remember=True)
+                return redirect(url_for('views.home'))
+            else:
+                flash('password is incorrect', category='error')
+        else:
+                flash('Email does not exist', category='error')
+
 
     return render_template("login.html")
 
@@ -49,6 +62,7 @@ def sign_up():
             new_user = User(email=email,username=username,password=generate_password_hash(password1, method='sha256'))
             db.session.add(new_user)
             db.session.commit()
+            login_user(new_user,remember=True)
             flash('User created!')
             return redirect(url_for('views.home'))
 
@@ -58,6 +72,7 @@ def sign_up():
 
 @auth.route("/logout")
 def logout():
+    logout_user()
     return redirect(url_for("views.home"))
 
 
