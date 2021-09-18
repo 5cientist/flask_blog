@@ -32,7 +32,7 @@ def login():
                 flash('Email does not exist', category='error')
 
 
-    return render_template("login.html")
+    return render_template("login.html", user=current_user)
 
 
 
